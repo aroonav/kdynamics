@@ -13,8 +13,8 @@ int main()
 	const int passwordLength = 11;		// Length of the password ".tie5Roanl" + Return Key.
 	const int noOfTries = 15;			// No. of tries done to train/create fuzzy rule for a single user
 	char* fbuff = new char[BUFFER_SIZE];		// File Buffer
-	ifstream fin;
-	fin.open("data/DSL-StrongPasswordData.csv", ios::in);
+
+	ifstream fin;fin.open("data/DSL-StrongPasswordData.csv", ios::in);
 
 	fin.getline(fbuff, BUFFER_SIZE);			// Removes the first line from the file
 	const int USERNAME_LENGTH = 4;				// Length of the username. ex "s001"
