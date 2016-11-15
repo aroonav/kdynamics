@@ -1,4 +1,5 @@
 fuzzy
 data/DSL-StrongPasswordData.csv
 data/DSL-StrongPasswordData.txt
+data/profiles.txt
 evaluation-script.R

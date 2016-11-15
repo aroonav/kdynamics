@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define PROFILEPATH "data/profiles.txt"
+#define DATASETPATH "data/DSL-StrongPasswordData.csv"
+
 using namespace std;
 
 // Returns the membership value for the given input depending on the other input variables
@@ -20,10 +23,21 @@ float membership_value(float input, float lowValue, float midValue, float highVa
 		return (highValue-input)/(highValue-midValue);
 }
 
+int writeProfileToFile(char* username, int* profile, int noOfDataItems)
+{
+	ofstream fout;fout.open(PROFILEPATH, std::ios_base::app);
+	fout<<username<<",";
+	for (int i = 0; i < noOfDataItems; i++)
+		fout<<profile[i]<<",";
+	fout<<endl;
+	fout.close();
+	return 0;
+}
+
 // This returns the membership for the delays in an array ``vector''. It can range from 0-4, i.e from Very Fast to Very Slow
 int gruntWork(float* vector, int noOfTries, int noOfFuzzySets)
 {
-	int finalMembership = -1;
+	int finalMembership = -1;									// Unclassified. The vector's data do not fit in any of the fuzzy sets.
 	float membership_values[noOfTries][noOfFuzzySets];			// This contains the membership values where each value denotes the membership value of that particular row in the column's fuzzy set.
 	float weightedAverage_memberships[noOfFuzzySets];			// After the defuzzification, the value is again fuzzified and this array contains the membership values for the defuzzified value in the $noOfFuzzySets fuzzy sets
 	float max = 0.0;
@@ -66,24 +80,24 @@ int gruntWork(float* vector, int noOfTries, int noOfFuzzySets)
 }
 
 // Fuzzy Inference System learning component
-void fis_learning()
+void fis_learning(const int noOfUsers, const int noOfTries)
 {
 	const int BUFFER_SIZE = 512;
-	const int USERNAME_LENGTH = 4;				// Length of the username. ex "s001"
-	const int noOfUsers = 50;			// No. of users for which this model is being built
-	const int passwordLength = 11;		// Length of the password ".tie5Roanl" + Return Key.
-	const int noOfTries = 15;			// No. of tries done to train/create fuzzy rule for a single user
-	const int noOfFuzzySets = 5;		// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
-	int finalMembership = -1;			// This denotes the final membership of the delays given in the vector. That is, whether the delays given in the vector is Very Fast, Fast, Moderate, Slow, Very Slow.
-	char* fbuff = new char[BUFFER_SIZE];		// File Buffer
+	const int USERNAME_LENGTH = 4;					// Length of the username. ex "s001"
+	const int passwordLength = 11;					// Length of the password ".tie5Roanl" + Return Key.
+	const int noOfFuzzySets = 5;					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
+	int finalMembership = -1;						// This denotes the final membership of the delays given in the vector. That is, whether the delays given in the vector is Very Fast, Fast, Moderate, Slow, Very Slow.
+	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
 	char* username = new char[USERNAME_LENGTH+1];
 	char* value = new char[6];
 	float delays[passwordLength-1][noOfTries];memset(delays, 0, sizeof(delays));
+	int profile[passwordLength-1];memset(profile, 0, sizeof(profile));
 
-	ifstream fin;fin.open("data/DSL-StrongPasswordData.csv", ios::in);
-	fin.getline(fbuff, BUFFER_SIZE);			// Removes the first line from the file
+	ifstream fin;fin.open(DATASETPATH, ios::in);
+	fin.getline(fbuff, BUFFER_SIZE);				// Removes the first line from the file
 
-	for(int i = 0; i<2; i++)						// For each user, create the rules
+	// for(int i = 0; i<noOfUsers; i++)						// For each user, create the rules
+	for(int i = 0; i<10; i++)						// For each user, create the rules
 	{
 		memset(delays, 0, sizeof(delays));
 		for (int j = 0; j < noOfTries; j++)			// By each user's, for each attempt out of his/her 15(``noOfTries'') attempts at the password, fill up a column in a plane
@@ -92,7 +106,7 @@ void fis_learning()
 			string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
 			istringstream istr(fbuffString);						// Create a stream from the std::string fbuffString
 			istr.getline(username, USERNAME_LENGTH+1, ',');			// Extract username from fbuffString's stream
-			if(j==0)	cout<<username<<endl;
+			if(j==0)	cout<<"Profiling for "<<username<<" starting...";
 
 			int position = 0;
 			for (int k = 1; k <= 33; k++)							// For each attempt at password, 10 values will be stored in a column
@@ -116,27 +130,33 @@ void fis_learning()
 		for (int j = 0; j < 10; j++)
 		{
 			finalMembership = gruntWork(delays[j], noOfTries, noOfFuzzySets);
-			cout<<"Delay "<<j+1<<" is "<<finalMembership<<endl;
+			profile[j] = finalMembership;
 		}
+		if(writeProfileToFile(username, profile, passwordLength-1)==0)
+			cout<<"Profile of "<<username<<" appended to "<<PROFILEPATH<<endl;
+		else
+			cout<<"Error in writing to file.";
 	}
 
-	delete username;
+	delete(username);
 	fin.close();
 	delete(fbuff);
 }
 
 // Fuzzy Inference System working/testing component
-void fis_working()
+void fis_working(const int noOfUsers, const int noOfTries)
 {
 }
 
 // Fuzzy inference system. option denotes learning or working option.
 void fis(int option)
 {
+	const int noOfUsers = 50;						// No. of users for this FIS.
+	const int noOfTries = 15;						// No. of trials done to train/create fuzzy rule for a single user
 	if(option==1)
-		fis_learning();
+		fis_learning(noOfUsers, noOfTries);
 	else
-		fis_working();
+		fis_working(noOfUsers, noOfTries);
 }
 
 int main()
