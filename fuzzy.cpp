@@ -83,7 +83,7 @@ void fis_learning()
 	ifstream fin;fin.open("data/DSL-StrongPasswordData.csv", ios::in);
 	fin.getline(fbuff, BUFFER_SIZE);			// Removes the first line from the file
 
-	for(int i = 0; i<50; i++)						// For each user, create the rules
+	for(int i = 0; i<2; i++)						// For each user, create the rules
 	{
 		memset(delays, 0, sizeof(delays));
 		for (int j = 0; j < noOfTries; j++)			// By each user's, for each attempt out of his/her 15(``noOfTries'') attempts at the password, fill up a column in a plane
