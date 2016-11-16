@@ -13,9 +13,8 @@
 #define NO_OF_FUZZY_SETS 5					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
 
 #define NO_OF_TRIES 15						// No. of trials done to train/create fuzzy rule for a single user
-
 #define NO_OF_USERS 10						// No. of users for this FIS.
-#define NO_OF_TESTING_ATTEMPTS 10			// This is the number of test attempts of one particular user against his/her stored profile. This means that 100 attempts of this user will be extracted from the dataset and checked against the stored profile.
+#define NO_OF_TESTING_ATTEMPTS 20			// This is the number of test attempts of one particular user against his/her stored profile. This means that 100 attempts of this user will be extracted from the dataset and checked against the stored profile.
 
 using namespace std;
 
@@ -135,7 +134,7 @@ void fis_learning()
 			string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
 			istringstream istr(fbuffString);						// Create a stream from the std::string fbuffString
 			istr.getline(username, USERNAME_LENGTH+1, ',');			// Extract username from fbuffString's stream
-			if(j==0)	cout<<"Profiling for "<<username<<" starting..."<<endl;
+			if(j==0)	cout<<"Profiling for "<<username<<" starting...";
 
 			int position = 0;
 			for (int k = 1; k <= 33; k++)							// For each attempt at password, 10 values will be stored in a column
@@ -299,7 +298,7 @@ void fis_working()
 				}
 			}
 			if(j==NO_OF_TRIES)
-				cout<<"Testing for "<<username<<" starting..."<<endl;
+				cout<<"Testing for "<<username<<" starting...";
 			// cout<<"Testing against: S:<session index> R:<repetition number>"<<endl;
 			// cout<<"S:"<<session<<" R:";printf("%02d-->", repetition);
 			gruntWorkForFisWorking(testDelays, testProfile);

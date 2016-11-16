@@ -11,10 +11,10 @@
 #define PASSWORD_LENGTH 11					// Length of the password ".tie5Roanl" + Return Key.
 #define UNCLASSIFIED_VALUE -10				// Value denoting Unclassification.
 #define NO_OF_FUZZY_SETS 5					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
-#define NO_OF_TRIES 15						// No. of trials done to train/create fuzzy rule for a single user
 
-#define NO_OF_USERS 50						// No. of users for this FIS.
-#define NO_OF_TESTING_ATTEMPTS 100			// This is the number of test attempts of one particular user against a stored profile.
+#define NO_OF_TRIES 15						// No. of trials done to train/create fuzzy rule for a single user
+#define NO_OF_USERS 10						// No. of users for this FIS.
+#define NO_OF_TESTING_ATTEMPTS 20			// This is the number of test attempts of one particular user against a stored profile.
 
 using namespace std;
 
@@ -23,7 +23,7 @@ float classifiers[NO_OF_FUZZY_SETS][3]={	//Low value, Middle Value, High Value
 							{26, 		 29,			32},	// Fast		(1)
 							{30, 		 33.5,			37},	// Moderate	(2)
 							{36, 		 40,			44},	// Slow		(3)
-							{42,		 46,			50}	// Very Slow(4)
+							{42,		 46,			50}		// Very Slow(4)
 					};
 
 // Returns the membership value for the given input depending on the other input variables
