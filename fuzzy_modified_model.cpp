@@ -135,17 +135,15 @@ void fis_learning()
 			}
 		}
 		for (int j = NO_OF_TRIES; j < 400; j++)						// This will discard the rest of the 385 lines of CSV and move the file pointer to the next user.
-			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
+			fin.getline(fbuff, BUFFER_SIZE);
 
 		for (int j = 0; j < PASSWORD_LENGTH-1; j++)
 		{
 			finalMembership = gruntWorkForFisLearning(delays[j]);
 			profile[j] = finalMembership;
 		}
-		if(writeProfileToFile(username, profile)==0)
-			cout<<"Profile of "<<username<<" appended to "<<PROFILEPATH<<endl;
-		else
-			cout<<"Error in writing to file.";
+		if(writeProfileToFile(username, profile)==0)	cout<<"Profile of "<<username<<" appended to "<<PROFILEPATH<<endl;
+		else	cout<<"Error in writing to file.";
 	}
 	delete(username);
 	fin.close();
