@@ -14,7 +14,7 @@
 #define NO_OF_TRIES 15						// No. of trials done to train/create fuzzy rule for a single user
 
 #define NO_OF_USERS 50						// No. of users for this FIS.
-#define NO_OF_TESTING_ATTEMPTS 100			// This is the number of test attempts of one particular user against his/her stored profile. This means that 100 attempts of this user will be extracted from the dataset and checked against the stored profile.
+#define NO_OF_TESTING_ATTEMPTS 10			// This is the number of test attempts of one particular user against his/her stored profile. This means that 100 attempts of this user will be extracted from the dataset and checked against the stored profile.
 
 using namespace std;
 
@@ -100,15 +100,14 @@ int gruntWorkForFisLearning(float* vector)
 // Fuzzy Inference System learning component
 void fis_learning()
 {
-	int finalMembership = UNCLASSIFIED_VALUE;					// This denotes the final membership of the delays given in the vector. That is, whether the delays given in the vector is Very Fast, Fast, Moderate, Slow, Very Slow. -10 denotes unclassified.
+	int finalMembership = UNCLASSIFIED_VALUE;			// This denotes the final membership of the delays given in the vector. That is, whether the delays given in the vector is Very Fast, Fast, Moderate, Slow, Very Slow. -10 denotes unclassified.
 	char* username = new char[USERNAME_LENGTH+1];
 	char* value = new char[6];
 	int profile[PASSWORD_LENGTH-1];memset(profile, 0, sizeof(profile));
 	float delays[PASSWORD_LENGTH-1][NO_OF_TRIES];memset(delays, 0, sizeof(delays));
-	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
-
+	char* fbuff = new char[BUFFER_SIZE];				// File Buffer
 	ifstream fin;fin.open(DATASETPATH, ios::in);
-	fin.getline(fbuff, BUFFER_SIZE);				// Removes the first line from the file
+	fin.getline(fbuff, BUFFER_SIZE);					// Removes the first line from the file
 
 	for(int i = 0; i<NO_OF_USERS; i++)					// For each user, create the rules
 	{
@@ -148,7 +147,6 @@ void fis_learning()
 		else
 			cout<<"Error in writing to file.";
 	}
-
 	delete(username);
 	fin.close();
 	delete(fbuff);
@@ -192,17 +190,7 @@ float checkSimilarityOfProfiles(int* storedProfile, int* testProfile)
 		}
 	}
 	float percentMatch = ((float)matchingValues/(PASSWORD_LENGTH-1))*100;
-//	printf("%02.0f%%\n", percentMatch);
 	return percentMatch;
-	/*	printf("matchingValues=%d\n", matchingValues);
-		cout<<"\t";
-		for (int i = 0; i < PASSWORD_LENGTH-1; i++)
-			printf("%2d ", storedProfile[i]);
-		cout<<endl;cout<<"\t";
-		for (int i = 0; i < PASSWORD_LENGTH-1; i++)
-			printf("%2d ", testProfile[i]);
-		cout<<endl;
-	*/
 }
 
 // This function classifies each value into a fuzzy set and stores the values of the fuzzy set in testProfile.
@@ -240,11 +228,12 @@ void fis_working()
 	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
 	int repetition = -1;
 	int session = -1;
+	float totalSum = 0.0;
 
 	ifstream fin;fin.open(DATASETPATH, ios::in);
 	fin.getline(fbuff, BUFFER_SIZE);				// Removes the first line from the file
 
-	for(int i = 0; i<NO_OF_USERS; i++)			// For each user, create the rules
+	for(int i = 0; i<NO_OF_USERS; i++)				// For each user, create the rules
 	{
 		float similarityPercent = 0.0; float meanSimilarityPercent = 0.0;
 		for (int j = 0; j < NO_OF_TRIES; j++)						// This will discard the first NO_OF_TRIES lines of CSV.
@@ -285,9 +274,11 @@ void fis_working()
 		}
 		meanSimilarityPercent = similarityPercent/NO_OF_TESTING_ATTEMPTS;
 		cout<<"Mean similarity percentage:"<<meanSimilarityPercent<<"%"<<endl;
+		totalSum += meanSimilarityPercent;
 		for (int j = (NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS); j < 400; j++)	// This will discard the rest of the (400-(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS)) lines of CSV and move the file pointer to the next user.
 			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
 	}
+	cout<<"Average similarity of test and stored profiles over all users:"<<(float)totalSum/(NO_OF_USERS)<<"%"<<endl;
 
 	delete(username);
 	fin.close();
@@ -297,10 +288,8 @@ void fis_working()
 // Fuzzy inference system. option denotes learning or working option.
 void fis(int option)
 {
-	if(option==1)
-		fis_learning();
-	else
-		fis_working();
+	if(option==1)	fis_learning();
+	else			fis_working();
 }
 
 int main()

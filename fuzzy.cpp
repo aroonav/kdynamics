@@ -27,7 +27,6 @@ float classifiers[NO_OF_FUZZY_SETS][3]={	//Low value, Middle Value, High Value
 					};
 
 // Returns the membership value for the given input depending on the other input variables
-// TODO: Take an input as an array which consists the last three values. So that the calling function can directly pass a row of classifiers 2D array.
 float membership_value(float input, float lowValue, float midValue, float highValue)
 {
 	if(input<lowValue || input>highValue)
@@ -140,8 +139,7 @@ void fis_learning()
 		}
 		if(writeProfileToFile(username, profile)==0)
 			cout<<"Profile of "<<username<<" appended to "<<PROFILEPATH<<endl;
-		else
-			cout<<"Error in writing to file.";
+		else	cout<<"Error in writing to file.";
 	}
 
 	delete(username);
@@ -235,6 +233,7 @@ void fis_working()
 	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
 	int repetition = -1;
 	int session = -1;
+	float totalSum = 0.0;
 
 	ifstream fin;fin.open(DATASETPATH, ios::in);
 	fin.getline(fbuff, BUFFER_SIZE);				// Removes the first line from the file
@@ -280,9 +279,11 @@ void fis_working()
 		}
 		meanSimilarityPercent = similarityPercent/NO_OF_TESTING_ATTEMPTS;
 		cout<<"Mean similarity percent:"<<meanSimilarityPercent<<"%"<<endl;
+		totalSum += meanSimilarityPercent;
 		for (int j = (NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS); j < 400; j++)	// This will discard the rest of the (400-(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS)) lines of CSV and move the file pointer to the next user.
 			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
 	}
+	cout<<"Average similarity of test and stored profiles over all users:"<<(float)totalSum/(NO_OF_USERS)<<"%"<<endl;
 
 	delete(username);
 	fin.close();
