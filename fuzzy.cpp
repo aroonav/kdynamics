@@ -132,7 +132,7 @@ void fis_learning()
 		for (int j = NO_OF_TRIES; j < 400; j++)						// This will discard the rest of the 385 lines of CSV and move the file pointer to the next user.
 			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
 
-		for (int j = 0; j < 10; j++)
+		for (int j = 0; j < PASSWORD_LENGTH-1; j++)
 		{
 			finalMembership = gruntWorkForFisLearning(delays[j]);
 			profile[j] = finalMembership;
@@ -161,7 +161,7 @@ void retrieveStoredProfile(int* storedProfile, char* username)
 		istr.getline(testUsername, USERNAME_LENGTH+1, ',');		// Extract username from fbuffString's stream
 		if(strcmp(username, testUsername)==0)
 		{
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < PASSWORD_LENGTH-1; i++)
 			{
 				istr.getline(value, 100, ',');					// Extracts next value from fbuffString's stream
 				storedProfile[i] = atof(value);
