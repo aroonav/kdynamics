@@ -13,25 +13,25 @@
 #define NO_OF_FUZZY_SETS 11					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
 #define NO_OF_TRIES 15						// No. of trials done to train/create fuzzy rule for a single user
 
-#define NO_OF_USERS 50						// No. of users for this FIS.
+#define NO_OF_USERS 1						// No. of users for this FIS.
 #define NO_OF_TESTING_ATTEMPTS 10			// This is the number of test attempts of one particular user against his/her stored profile. This means that 100 attempts of this user will be extracted from the dataset and checked against the stored profile.
 
 using namespace std;
 
 float classifiers[NO_OF_FUZZY_SETS][3]={	//Low value, Middle Value, High Value
-							{06,		 9.5,			13},	// Very Very Very Very Fast(-3)
-							{10,		 14,			18},	// Very Very Very Fast(-2)
-							{16,		 19.5,			23},	// Very Very Fast(-1)
+							{06,		 9.5,			13},	// Very Very Very Very Fast
+							{10,		 14,			18},	// Very Very Very Fast
+							{16,		 19.5,			23},	// Very Very Fast
 
-							{21,		 25.5,			29},	// Very Fast(0)
-							{26, 		 29,			32},	// Fast		(1)
-							{30, 		 33.5,			37},	// Moderate	(2)
-							{36, 		 40,			44},	// Slow		(3)
-							{42,		 46,			50},	// Very Slow(4)
+							{21,		 25.5,			29},	// Very Fast
+							{26, 		 29,			32},	// Fast
+							{30, 		 33.5,			37},	// Moderate
+							{36, 		 40,			44},	// Slow
+							{42,		 46,			50},	// Very Slow
 
-							{48,		 52,			56},	// Very Very Slow(5)
-							{54,		 58,			62},	// Very Very Very Slow(6)
-							{60,		 64,			68}		// Very Very Very Very Slow(7)
+							{48,		 52,			56},	// Very Very Slow
+							{54,		 58,			62},	// Very Very Very Slow
+							{60,		 64,			68}		// Very Very Very Very Slow
 					};
 
 // Returns the membership value for the given input depending on the other input variables
