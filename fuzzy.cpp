@@ -10,8 +10,10 @@
 #define USERNAME_LENGTH 4					// Length of the username. ex "s001"
 #define PASSWORD_LENGTH 11					// Length of the password ".tie5Roanl" + Return Key.
 #define NO_OF_FUZZY_SETS 5					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
-#define NO_OF_USERS 50						// No. of users for this FIS.
 #define NO_OF_TRIES 15						// No. of trials done to train/create fuzzy rule for a single user
+
+#define NO_OF_USERS 10						// No. of users for this FIS.
+#define NO_OF_TESTING_ATTEMPTS 10			// This is the number of test attempts of one particular user against a stored profile.
 
 using namespace std;
 
@@ -42,7 +44,7 @@ int writeProfileToFile(char* username, int* profile)
 }
 
 // This returns the membership for the delays in an array ``vector''. It can range from 0-4, i.e from Very Fast to Very Slow
-int gruntWork(float* vector)
+int gruntWorkForFisLearning(float* vector)
 {
 	int finalMembership = -1;									// Unclassified. The vector's data do not fit in any of the fuzzy sets.
 	float membership_values[NO_OF_TRIES][NO_OF_FUZZY_SETS];			// This contains the membership values where each value denotes the membership value of that particular row in the column's fuzzy set.
@@ -86,11 +88,6 @@ int gruntWork(float* vector)
 	return finalMembership;
 }
 
-void sss()
-{
-
-}
-
 // Fuzzy Inference System learning component
 void fis_learning()
 {
@@ -104,8 +101,7 @@ void fis_learning()
 	ifstream fin;fin.open(DATASETPATH, ios::in);
 	fin.getline(fbuff, BUFFER_SIZE);				// Removes the first line from the file
 
-	// for(int i = 0; i<NO_OF_USERS; i++)						// For each user, create the rules
-	for(int i = 0; i<10; i++)						// For each user, create the rules
+	for(int i = 0; i<NO_OF_USERS; i++)						// For each user, create the rules
 	{
 		memset(delays, 0, sizeof(delays));
 		for (int j = 0; j < NO_OF_TRIES; j++)			// By each user's, for each attempt out of his/her 15(``NO_OF_TRIES'') attempts at the password, fill up a column in a plane
@@ -137,7 +133,7 @@ void fis_learning()
 
 		for (int j = 0; j < 10; j++)
 		{
-			finalMembership = gruntWork(delays[j]);
+			finalMembership = gruntWorkForFisLearning(delays[j]);
 			profile[j] = finalMembership;
 		}
 		if(writeProfileToFile(username, profile)==0)
@@ -151,9 +147,148 @@ void fis_learning()
 	delete(fbuff);
 }
 
+// This function classifies each value into a fuzzy set and stores the values of the fuzzy set in testProfile.
+int gruntWorkForFisWorking(float* vector, int* testProfile)
+{
+	float membership_values[PASSWORD_LENGTH-1][NO_OF_FUZZY_SETS];	// This contains the membership values where each value denotes the membership value of that particular row in the column's fuzzy set.
+	float max = 0.0;
+	float classifiers[5][3]={	//Low value, Middle Value, High Value
+							{21,		 25.5,			29},	// Very Fast(0)
+							{26, 		 29,			32},	// Fast		(1)
+							{30, 		 33.5,			37},	// Moderate	(2)
+							{36, 		 40,			44},	// Slow		(3)
+							{42,		 46,			50}		// Very Slow(4)
+						};
+	memset(membership_values, 0, sizeof(membership_values));
+
+	for (int i = 0; i < PASSWORD_LENGTH-1; i++)						// This finds the union of the fuzzy sets by finding the maximum of all the membership values for a particular row. It then uses this value to find the numerator and denominator to find the weightedAverage.
+	{
+		float max = 0.0;
+		int finalMembership = -1;
+		for (int j = 0; j < NO_OF_FUZZY_SETS; j++)
+		{
+			membership_values[i][j] = membership_value(vector[i], classifiers[j][0], classifiers[j][1], classifiers[j][2]);
+			if (membership_values[i][j]>max)
+			{
+				max = membership_values[i][j];
+				finalMembership = j;
+			}
+		}
+		testProfile[i] = finalMembership;
+	}
+}
+
+void retrieveStoredProfile(int* storedProfile, char* username)
+{
+	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
+	char* testUsername = new char[USERNAME_LENGTH+1];
+	char* value = new char[6];
+	ifstream fin;fin.open(PROFILEPATH, ios::in);
+	do
+	{
+		fin.getline(fbuff, BUFFER_SIZE);
+		string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
+		istringstream istr(fbuffString);						// Create a stream from the std::string fbuffString
+		istr.getline(testUsername, USERNAME_LENGTH+1, ',');		// Extract username from fbuffString's stream
+		if(strcmp(username, testUsername)==0)
+		{
+			for (int i = 0; i < 10; i++)
+			{
+				istr.getline(value, 100, ',');					// Extracts next value from fbuffString's stream
+				storedProfile[i] = atof(value);
+			}
+		}
+	} while(fin);
+
+	fin.close();
+	delete(fbuff);
+	delete(testUsername);
+}
+
+void checkSimilarityOfProfiles(int* storedProfile, int* testProfile)
+{
+	int matchingValues = 0;
+	for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+	{
+		if(storedProfile[i]==testProfile[i])
+		{	matchingValues++;
+			// cout<<storedProfile[i]<<" "<<testProfile[i]<<endl;
+		}
+	}
+	float percentMatch = ((float)matchingValues/(PASSWORD_LENGTH-1))*100;
+	printf("%02.0f%%\n", percentMatch);
+	/*	printf("matchingValues=%d\n", matchingValues);
+		cout<<"\t";
+		for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+			printf("%2d ", storedProfile[i]);
+		cout<<endl;cout<<"\t";
+		for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+			printf("%2d ", testProfile[i]);
+		cout<<endl;
+	*/
+}
+
 // Fuzzy Inference System working/testing component
 void fis_working()
 {
+	char* username = new char[USERNAME_LENGTH+1];
+	char* value = new char[6];
+	int testProfile[PASSWORD_LENGTH-1];memset(testProfile, 0, sizeof(testProfile));
+	int storedProfile[PASSWORD_LENGTH-1];memset(storedProfile, 0, sizeof(storedProfile));
+	float testDelays[PASSWORD_LENGTH-1];memset(testDelays, 0, sizeof(testDelays));
+	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
+	int repetition = -1;
+	int session = -1;
+
+	ifstream fin;fin.open(DATASETPATH, ios::in);
+	fin.getline(fbuff, BUFFER_SIZE);				// Removes the first line from the file
+
+	for(int i = 0; i<NO_OF_USERS; i++)			// For each user, create the rules
+	{
+		for (int j = 0; j < NO_OF_TRIES; j++)						// This will discard the first NO_OF_TRIES lines of CSV.
+			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
+
+		memset(testDelays, 0, sizeof(testDelays));
+		for(int j = NO_OF_TRIES; j<(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS); j++)
+		{
+			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
+			string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
+			istringstream istr(fbuffString);						// Create a stream from the std::string fbuffString
+			istr.getline(username, USERNAME_LENGTH+1, ',');			// Extract username from fbuffString's stream
+
+			int position = 0;
+			for (int k = 1; k <= 33; k++)							// For each attempt at password, 10 values will be stored in a column
+			{
+				istr.getline(value, 100, ',');						// Extracts next value from fbuffString's stream
+				if(k==1)
+					session = atoi(value);
+				if(k==2)
+					repetition = atoi(value);
+				// if(k==5 || k==8 || k==11 || k==14 || k==17 || k==20 || k==23 || k==26 || k==29 || k==32)	// UD.key1.key2 values from the dataset are used to denote the delay between the keys.
+				if(k==4 || k==7 || k==10 || k==13 || k==16 || k==19 || k==22 || k==25 || k==28 || k==31)	// DD.key1.key2 values from the dataset are used to denote the delay between the keys.
+				{
+					float temp = atof(value);
+					if(temp<0)
+						testDelays[position] = 0;
+					else
+						testDelays[position] = temp*100;
+					position++;
+				}
+			}
+			if(j==NO_OF_TRIES)
+				cout<<"Testing for "<<username<<" starting...\n"<<"Testing against: S:<session index> R:<repetition number>"<<endl;
+			cout<<"S:"<<session<<" R:";printf("%02d-->", repetition);
+			gruntWorkForFisWorking(testDelays, testProfile);
+			retrieveStoredProfile(storedProfile, username);
+			checkSimilarityOfProfiles(storedProfile, testProfile);
+		}
+		for (int j = (NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS); j < 400; j++)	// This will discard the rest of the (400-(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS)) lines of CSV and move the file pointer to the next user.
+			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
+	}
+
+	delete(username);
+	fin.close();
+	delete(fbuff);
 }
 
 // Fuzzy inference system. option denotes learning or working option.
