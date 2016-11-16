@@ -12,8 +12,8 @@
 #define NO_OF_FUZZY_SETS 5					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
 #define NO_OF_TRIES 15						// No. of trials done to train/create fuzzy rule for a single user
 
-#define NO_OF_USERS 10						// No. of users for this FIS.
-#define NO_OF_TESTING_ATTEMPTS 10			// This is the number of test attempts of one particular user against a stored profile.
+#define NO_OF_USERS 50						// No. of users for this FIS.
+#define NO_OF_TESTING_ATTEMPTS 200			// This is the number of test attempts of one particular user against a stored profile.
 
 using namespace std;
 
@@ -147,6 +147,57 @@ void fis_learning()
 	delete(fbuff);
 }
 
+void retrieveStoredProfile(int* storedProfile, char* username)
+{
+	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
+	char* testUsername = new char[USERNAME_LENGTH+1];
+	char* value = new char[6];
+	ifstream fin;fin.open(PROFILEPATH, ios::in);
+	do
+	{
+		fin.getline(fbuff, BUFFER_SIZE);
+		string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
+		istringstream istr(fbuffString);						// Create a stream from the std::string fbuffString
+		istr.getline(testUsername, USERNAME_LENGTH+1, ',');		// Extract username from fbuffString's stream
+		if(strcmp(username, testUsername)==0)
+		{
+			for (int i = 0; i < 10; i++)
+			{
+				istr.getline(value, 100, ',');					// Extracts next value from fbuffString's stream
+				storedProfile[i] = atof(value);
+			}
+		}
+	} while(fin);
+
+	fin.close();
+	delete(fbuff);
+	delete(testUsername);
+}
+
+float checkSimilarityOfProfiles(int* storedProfile, int* testProfile)
+{
+	int matchingValues = 0;
+	for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+	{
+		if(storedProfile[i]==testProfile[i])
+		{	matchingValues++;
+			// cout<<storedProfile[i]<<" "<<testProfile[i]<<endl;
+		}
+	}
+	float percentMatch = ((float)matchingValues/(PASSWORD_LENGTH-1))*100;
+//	printf("%02.0f%%\n", percentMatch);
+	return percentMatch;
+	/*	printf("matchingValues=%d\n", matchingValues);
+		cout<<"\t";
+		for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+			printf("%2d ", storedProfile[i]);
+		cout<<endl;cout<<"\t";
+		for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+			printf("%2d ", testProfile[i]);
+		cout<<endl;
+	*/
+}
+
 // This function classifies each value into a fuzzy set and stores the values of the fuzzy set in testProfile.
 int gruntWorkForFisWorking(float* vector, int* testProfile)
 {
@@ -178,56 +229,6 @@ int gruntWorkForFisWorking(float* vector, int* testProfile)
 	}
 }
 
-void retrieveStoredProfile(int* storedProfile, char* username)
-{
-	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
-	char* testUsername = new char[USERNAME_LENGTH+1];
-	char* value = new char[6];
-	ifstream fin;fin.open(PROFILEPATH, ios::in);
-	do
-	{
-		fin.getline(fbuff, BUFFER_SIZE);
-		string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
-		istringstream istr(fbuffString);						// Create a stream from the std::string fbuffString
-		istr.getline(testUsername, USERNAME_LENGTH+1, ',');		// Extract username from fbuffString's stream
-		if(strcmp(username, testUsername)==0)
-		{
-			for (int i = 0; i < 10; i++)
-			{
-				istr.getline(value, 100, ',');					// Extracts next value from fbuffString's stream
-				storedProfile[i] = atof(value);
-			}
-		}
-	} while(fin);
-
-	fin.close();
-	delete(fbuff);
-	delete(testUsername);
-}
-
-void checkSimilarityOfProfiles(int* storedProfile, int* testProfile)
-{
-	int matchingValues = 0;
-	for (int i = 0; i < PASSWORD_LENGTH-1; i++)
-	{
-		if(storedProfile[i]==testProfile[i])
-		{	matchingValues++;
-			// cout<<storedProfile[i]<<" "<<testProfile[i]<<endl;
-		}
-	}
-	float percentMatch = ((float)matchingValues/(PASSWORD_LENGTH-1))*100;
-	printf("%02.0f%%\n", percentMatch);
-	/*	printf("matchingValues=%d\n", matchingValues);
-		cout<<"\t";
-		for (int i = 0; i < PASSWORD_LENGTH-1; i++)
-			printf("%2d ", storedProfile[i]);
-		cout<<endl;cout<<"\t";
-		for (int i = 0; i < PASSWORD_LENGTH-1; i++)
-			printf("%2d ", testProfile[i]);
-		cout<<endl;
-	*/
-}
-
 // Fuzzy Inference System working/testing component
 void fis_working()
 {
@@ -245,6 +246,7 @@ void fis_working()
 
 	for(int i = 0; i<NO_OF_USERS; i++)			// For each user, create the rules
 	{
+		float similarityPercent = 0.0; float meanSimilarityPercent = 0.0;
 		for (int j = 0; j < NO_OF_TRIES; j++)						// This will discard the first NO_OF_TRIES lines of CSV.
 			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
 
@@ -260,10 +262,8 @@ void fis_working()
 			for (int k = 1; k <= 33; k++)							// For each attempt at password, 10 values will be stored in a column
 			{
 				istr.getline(value, 100, ',');						// Extracts next value from fbuffString's stream
-				if(k==1)
-					session = atoi(value);
-				if(k==2)
-					repetition = atoi(value);
+				if(k==1)	session = atoi(value);
+				if(k==2)	repetition = atoi(value);
 				// if(k==5 || k==8 || k==11 || k==14 || k==17 || k==20 || k==23 || k==26 || k==29 || k==32)	// UD.key1.key2 values from the dataset are used to denote the delay between the keys.
 				if(k==4 || k==7 || k==10 || k==13 || k==16 || k==19 || k==22 || k==25 || k==28 || k==31)	// DD.key1.key2 values from the dataset are used to denote the delay between the keys.
 				{
@@ -276,12 +276,15 @@ void fis_working()
 				}
 			}
 			if(j==NO_OF_TRIES)
-				cout<<"Testing for "<<username<<" starting...\n"<<"Testing against: S:<session index> R:<repetition number>"<<endl;
-			cout<<"S:"<<session<<" R:";printf("%02d-->", repetition);
+				cout<<"Testing for "<<username<<" starting...";
+			// cout<<"Testing against: S:<session index> R:<repetition number>"<<endl;
+			// cout<<"S:"<<session<<" R:";printf("%02d-->", repetition);
 			gruntWorkForFisWorking(testDelays, testProfile);
 			retrieveStoredProfile(storedProfile, username);
-			checkSimilarityOfProfiles(storedProfile, testProfile);
+			similarityPercent += checkSimilarityOfProfiles(storedProfile, testProfile);
 		}
+		meanSimilarityPercent = similarityPercent/NO_OF_TESTING_ATTEMPTS;
+		cout<<"Mean similarity percent:"<<meanSimilarityPercent<<"%"<<endl;
 		for (int j = (NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS); j < 400; j++)	// This will discard the rest of the (400-(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS)) lines of CSV and move the file pointer to the next user.
 			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
 	}
