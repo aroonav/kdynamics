@@ -10,38 +10,21 @@
 #define USERNAME_LENGTH 4					// Length of the username. ex "s001"
 #define PASSWORD_LENGTH 11					// Length of the password ".tie5Roanl" + Return Key.
 #define UNCLASSIFIED_VALUE -10				// Value denoting Unclassification.
-#define NO_OF_FUZZY_SETS 21					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
+#define NO_OF_FUZZY_SETS 5					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
+
 #define NO_OF_TRIES 15						// No. of trials done to train/create fuzzy rule for a single user
 
-#define NO_OF_USERS 1						// No. of users for this FIS.
+#define NO_OF_USERS 10						// No. of users for this FIS.
 #define NO_OF_TESTING_ATTEMPTS 10			// This is the number of test attempts of one particular user against his/her stored profile. This means that 100 attempts of this user will be extracted from the dataset and checked against the stored profile.
 
 using namespace std;
 
 float classifiers[NO_OF_FUZZY_SETS][3]={	//Low value, Middle Value, High Value
-							{06,		 9.5,			13},	// Very Very Very Very Fast
-							{10,		 14,			18},	// Very Very Very Fast
-							{16,		 19.5,			23},	// Very Very Fast
-
-							{21,		 25.5,			29},	// Very Fast
-							{26, 		 29,			32},	// Fast
-							{30, 		 33.5,			37},	// Moderate
-							{36, 		 40,			44},	// Slow
-							{42,		 46,			50},	// Very Slow
-
-							{48,		 52,			56},	// Very Very Slow
-							{54,		 58,			62},	// Very Very Very Slow
-							{60,		 64,			68},	// Very Very Very Very Slow
-							{66,		 70,			74},	// 
-							{72,		 76,			80},	// 
-							{78,		 82,			86},	// 
-							{84,		 88,			92},	//
-							{90,		 94,			98},	//
-							{96,		 100,			104},	//
-							{102,		 106,			110},	//
-							{108,		 112,			116},	//
-							{114,		 118,			122},	//
-							{120,		 124,			128}	//
+							{6,			 22,			38},	// Very Fast
+							{28, 		 44,			60},	// Fast
+							{50, 		 66,			82},	// Moderate
+							{72, 		 88,			104},	// Slow
+							{94,		 110,			126}		// Very Slow
 					};
 
 // Returns the membership value for the given input depending on the other input variables
