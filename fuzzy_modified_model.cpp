@@ -10,7 +10,7 @@
 #define USERNAME_LENGTH 4					// Length of the username. ex "s001"
 #define PASSWORD_LENGTH 11					// Length of the password ".tie5Roanl" + Return Key.
 #define UNCLASSIFIED_VALUE -10				// Value denoting Unclassification.
-#define NO_OF_FUZZY_SETS 11					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
+#define NO_OF_FUZZY_SETS 21					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
 #define NO_OF_TRIES 15						// No. of trials done to train/create fuzzy rule for a single user
 
 #define NO_OF_USERS 1						// No. of users for this FIS.
@@ -31,7 +31,17 @@ float classifiers[NO_OF_FUZZY_SETS][3]={	//Low value, Middle Value, High Value
 
 							{48,		 52,			56},	// Very Very Slow
 							{54,		 58,			62},	// Very Very Very Slow
-							{60,		 64,			68}		// Very Very Very Very Slow
+							{60,		 64,			68},	// Very Very Very Very Slow
+							{66,		 70,			74},	// 
+							{72,		 76,			80},	// 
+							{78,		 82,			86},	// 
+							{84,		 88,			92},	//
+							{90,		 94,			98},	//
+							{96,		 100,			104},	//
+							{102,		 106,			110},	//
+							{108,		 112,			116},	//
+							{114,		 118,			122},	//
+							{120,		 124,			128}	//
 					};
 
 // Returns the membership value for the given input depending on the other input variables
@@ -86,16 +96,16 @@ int gruntWorkForFisLearning(float* vector)
 	if(membershipSum!=0)
 		weightedAverage_cog = weightedSum/membershipSum;		// Defuzzified value using Centre of Gravity method.
 
-//	This block is for testing purposes only. This block allows us to see the values in realtime.
-		cout<<"##################Part1\n";
-		for (int i = 0; i < NO_OF_TRIES; i++)
-		{
-			cout<<vector[i]<<" ";
-			for (int j = 0; j < NO_OF_FUZZY_SETS; j++)
-				cout<<membership_values[i][j]<<" ";
-			cout<<endl;
-		}
-//	Testing block ends here.
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+// 		cout<<"##################Part1\n";
+// 		for (int i = 0; i < NO_OF_TRIES; i++)
+// 		{
+// 			cout<<vector[i]<<" ";
+// 			for (int j = 0; j < NO_OF_FUZZY_SETS; j++)
+// 				cout<<membership_values[i][j]<<" ";
+// 			cout<<endl;
+// 		}
+// //	Testing block ends here.
 
 	for (int i = 0; i < NO_OF_FUZZY_SETS; i++)					// Defuzzified value is again fuzzified in this step.
 	{
@@ -107,16 +117,16 @@ int gruntWorkForFisLearning(float* vector)
 		}
 	}
 
-//	This block is for testing purposes only. This block allows us to see the values in realtime.
-		cout<<"###################Part2\n";
-		for (int i = 0; i < NO_OF_FUZZY_SETS; i++)
-		{
-			cout<<weightedAverage_memberships[i]<<" ";
-		}
-		cout<<endl;
-		cout<<"weightedAverage_cog="<<weightedAverage_cog<<" weightedSum="<<weightedSum<<" membershipSum="<<membershipSum<<" finalMembership="<<finalMembership<<endl;
-		scanf("%*c");
-//	Testing Block ends here.
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+// 		cout<<"###################Part2\n";
+// 		for (int i = 0; i < NO_OF_FUZZY_SETS; i++)
+// 		{
+// 			cout<<weightedAverage_memberships[i]<<" ";
+// 		}
+// 		cout<<endl;
+// 		cout<<"weightedAverage_cog="<<weightedAverage_cog<<" weightedSum="<<weightedSum<<" membershipSum="<<membershipSum<<" finalMembership="<<finalMembership<<endl;
+// 		scanf("%*c");
+// //	Testing Block ends here.
 
 	return finalMembership;
 }
@@ -158,7 +168,7 @@ void fis_learning()
 				}
 			}
 		}
-		for (int j = NO_OF_TRIES; j < 400; j++)						// This will discard the rest of the 385 lines of CSV and move the file pointer to the next user.
+		for (int j = NO_OF_TRIES; j < 400; j++)						// This will discard the rest of the (400-NO_OF_TRIES) lines of CSV and move the file pointer to the next user.
 			fin.getline(fbuff, BUFFER_SIZE);
 
 		for (int j = 0; j < PASSWORD_LENGTH-1; j++)
@@ -173,6 +183,7 @@ void fis_learning()
 	fin.close();
 	delete(fbuff);
 }
+
 
 void retrieveStoredProfile(int* storedProfile, char* username)
 {
@@ -216,7 +227,7 @@ float checkSimilarityOfProfiles(int* storedProfile, int* testProfile)
 }
 
 // This function classifies each value into a fuzzy set and stores the values of the fuzzy set in testProfile.
-int gruntWorkForFisWorking(float* vector, int* testProfile)
+void gruntWorkForFisWorking(float* vector, int* testProfile)
 {
 	float membership_values[PASSWORD_LENGTH-1][NO_OF_FUZZY_SETS];	// This contains the membership values where each value denotes the membership value of that particular row in the column's fuzzy set.
 	float max = 0.0;
@@ -226,6 +237,9 @@ int gruntWorkForFisWorking(float* vector, int* testProfile)
 	{
 		float max = 0.0;
 		int finalMembership = UNCLASSIFIED_VALUE;
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+// 			cout<<vector[i]<<" ";
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
 		for (int j = 0; j < NO_OF_FUZZY_SETS; j++)
 		{
 			membership_values[i][j] = membership_value(vector[i], classifiers[j][0], classifiers[j][1], classifiers[j][2]);
@@ -234,9 +248,24 @@ int gruntWorkForFisWorking(float* vector, int* testProfile)
 				max = membership_values[i][j];
 				finalMembership = j;
 			}
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+// 			cout<<membership_values[i][j]<<" ";
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
 		}
+
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+// 		cout<<endl;
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
 		testProfile[i] = finalMembership;
 	}
+
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+// 	cout<<"Membership Values: ";
+// 	for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+// 		cout<<testProfile[i]<<" ";
+// 	cout<<endl<<endl;
+// 	scanf("%*c");
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
 }
 
 // Fuzzy Inference System working/testing component
@@ -287,7 +316,7 @@ void fis_working()
 				}
 			}
 			if(j==NO_OF_TRIES)
-				cout<<"Testing for "<<username<<" starting...";
+				cout<<"Testing for "<<username<<" starting..."<<endl;
 			// cout<<"Testing against: S:<session index> R:<repetition number>"<<endl;
 			// cout<<"S:"<<session<<" R:";printf("%02d-->", repetition);
 			gruntWorkForFisWorking(testDelays, testProfile);
