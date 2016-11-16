@@ -85,6 +85,18 @@ int gruntWorkForFisLearning(float* vector)
 	}
 	if(membershipSum!=0)
 		weightedAverage_cog = weightedSum/membershipSum;		// Defuzzified value using Centre of Gravity method.
+
+//	This block is for testing purposes only. This block allows us to see the values in realtime.
+		cout<<"##################Part1\n";
+		for (int i = 0; i < NO_OF_TRIES; i++)
+		{
+			cout<<vector[i]<<" ";
+			for (int j = 0; j < NO_OF_FUZZY_SETS; j++)
+				cout<<membership_values[i][j]<<" ";
+			cout<<endl;
+		}
+//	Testing block ends here.
+
 	for (int i = 0; i < NO_OF_FUZZY_SETS; i++)					// Defuzzified value is again fuzzified in this step.
 	{
 		weightedAverage_memberships[i] = membership_value(weightedAverage_cog, classifiers[i][0], classifiers[i][1], classifiers[i][2]);
@@ -94,6 +106,18 @@ int gruntWorkForFisLearning(float* vector)
 			max = weightedAverage_memberships[i];
 		}
 	}
+
+//	This block is for testing purposes only. This block allows us to see the values in realtime.
+		cout<<"###################Part2\n";
+		for (int i = 0; i < NO_OF_FUZZY_SETS; i++)
+		{
+			cout<<weightedAverage_memberships[i]<<" ";
+		}
+		cout<<endl;
+		cout<<"weightedAverage_cog="<<weightedAverage_cog<<" weightedSum="<<weightedSum<<" membershipSum="<<membershipSum<<" finalMembership="<<finalMembership<<endl;
+		scanf("%*c");
+//	Testing Block ends here.
+
 	return finalMembership;
 }
 
@@ -294,6 +318,6 @@ int main()
 {
 	int option;
 	cout<<"Fuzzy inference system:\nSelect mode:\n\t1.Learning\n\t2.Working\n";
-	cin>>option;
+	scanf("%d%*c", &option);
 	fis(option);
 }
