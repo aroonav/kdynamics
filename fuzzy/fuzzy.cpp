@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define PROFILEPATH "data/profiles.txt"
-#define DATASETPATH "data/DSL-StrongPasswordData.csv"
+#define PROFILEPATH "profile/profiles.txt"
+#define DATASETPATH "../data/DSL-StrongPasswordData.csv"
 #define BUFFER_SIZE 512
 #define USERNAME_LENGTH 4					// Length of the username. ex "s001"
 #define PASSWORD_LENGTH 11					// Length of the password ".tie5Roanl" + Return Key.
