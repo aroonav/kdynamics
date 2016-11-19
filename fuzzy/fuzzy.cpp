@@ -23,7 +23,7 @@ float classifiers[NO_OF_FUZZY_SETS][3]={	//Low value, Middle Value, High Value
 							{28, 		 44,			60},	// Fast
 							{50, 		 66,			82},	// Moderate
 							{72, 		 88,			104},	// Slow
-							{94,		 110,			126}		// Very Slow
+							{94,		 110,			126}	// Very Slow
 					};
 
 // Returns the membership value for the given input depending on the other input variables
@@ -51,7 +51,7 @@ int writeProfileToFile(char* username, int* profile)
 	return 0;
 }
 
-// This returns the membership for the delays in an array ``vector''. It can range from 0 to NO_OF_FUZZY_SETS
+// This returns the membership for the delays in an array ``vector''. It can range from 0 to NO_OF_FUZZY_SETS-1 or UNCLASSIFIED_VALUE.
 int gruntWorkForFisLearning(float* vector)
 {
 	int finalMembership = UNCLASSIFIED_VALUE;						// Unclassified. The vector's data do not fit in any of the fuzzy sets.
@@ -266,7 +266,7 @@ void fis_working()
 	ifstream fin;fin.open(DATASETPATH, ios::in);
 	fin.getline(fbuff, BUFFER_SIZE);				// Removes the first line from the file
 
-	for(int i = 0; i<NO_OF_USERS; i++)				// For each user, create the rules
+	for(int i = 0; i<NO_OF_USERS; i++)				// For each user, check the similarity of the stored profile and NO_OF_TESTING_ATTEMPTS test profile.
 	{
 		float similarityPercent = 0.0; float meanSimilarityPercent = 0.0;
 		for (int j = 0; j < NO_OF_TRIES; j++)						// This will discard the first NO_OF_TRIES lines of CSV.

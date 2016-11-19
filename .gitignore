@@ -5,4 +5,4 @@ evaluation-script.R
 output
 data/.~lock.DSL-StrongPasswordData.csv#
 models
-profiles.txt
+fuzzy/profile/profiles.txt
