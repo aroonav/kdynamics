@@ -262,56 +262,69 @@ void fis_working()
 	int repetition = -1;
 	int session = -1;
 	float totalSum = 0.0;
+	string usernames[NO_OF_USERS];
 
 	ifstream fin;fin.open(DATASETPATH, ios::in);
-	fin.getline(fbuff, BUFFER_SIZE);				// Removes the first line from the file
 
-	for(int i = 0; i<NO_OF_USERS; i++)				// For each user, check the similarity of the stored profile and NO_OF_TESTING_ATTEMPTS test profile.
+	for (int i = 0; i < NO_OF_USERS; i++)			// For each ith user, compare the ith user's stored profile with jth user's profile.
 	{
-		float similarityPercent = 0.0; float meanSimilarityPercent = 0.0;
-		for (int j = 0; j < NO_OF_TRIES; j++)						// This will discard the first NO_OF_TRIES lines of CSV.
-			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
-
-		memset(testDelays, 0, sizeof(testDelays));
-		for(int j = NO_OF_TRIES; j<(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS); j++)
+		fin.clear();
+		fin.seekg(0, ios::beg);						// Take the get pointer to the start of the file.
+		fin.getline(fbuff, BUFFER_SIZE);			// Removes the first line from the file
+		cout<<endl;
+		for(int j = 0; j<NO_OF_USERS; j++)
 		{
-			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
-			string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
-			istringstream istr(fbuffString);						// Create a stream from the std::string fbuffString
-			istr.getline(username, USERNAME_LENGTH+1, ',');			// Extract username from fbuffString's stream
+			float similarityPercent = 0.0; float meanSimilarityPercent = 0.0;int start = 0;
+			memset(testDelays, 0, sizeof(testDelays));
 
-			int position = 0;
-			for (int k = 1; k <= 33; k++)							// For each attempt at password, 10 values will be stored in a column
-			{
-				istr.getline(value, 100, ',');						// Extracts next value from fbuffString's stream
-				if(k==1)	session = atoi(value);
-				if(k==2)	repetition = atoi(value);
-				// if(k==5 || k==8 || k==11 || k==14 || k==17 || k==20 || k==23 || k==26 || k==29 || k==32)	// UD.key1.key2 values from the dataset are used to denote the delay between the keys.
-				if(k==4 || k==7 || k==10 || k==13 || k==16 || k==19 || k==22 || k==25 || k==28 || k==31)	// DD.key1.key2 values from the dataset are used to denote the delay between the keys.
-				{
-					float temp = atof(value);
-					if(temp<0)
-						testDelays[position] = 0;
-					else
-						testDelays[position] = temp*100;
-					position++;
-				}
+
+			if(i==j)	// The jth user is being tested against its own stored profile if this is true.
+			{	for(int k=0; k<NO_OF_TRIES; k++)
+					fin.getline(fbuff, BUFFER_SIZE);
+				start = NO_OF_TRIES;
 			}
-			if(j==NO_OF_TRIES)
-				cout<<"Testing for "<<username<<" starting...";
-			// cout<<"Testing against: S:<session index> R:<repetition number>"<<endl;
-			// cout<<"S:"<<session<<" R:";printf("%02d-->", repetition);
-			gruntWorkForFisWorking(testDelays, testProfile);
-			retrieveStoredProfile(storedProfile, username);
-			similarityPercent += checkSimilarityOfProfiles(storedProfile, testProfile);
+			else
+				start = 0;
+
+			for(int k = start; k<(start+NO_OF_TESTING_ATTEMPTS); k++)
+			{
+				fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
+				string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
+				istringstream istr(fbuffString);						// Create a stream from the std::string fbuffString
+				istr.getline(username, USERNAME_LENGTH+1, ',');			// Extract username from fbuffString's stream
+				if(k==start)	usernames[j] = username;
+
+				int position = 0;
+				for (int l = 1; l <= 33; l++)							// For each attempt at password, 10 values will be stored in a column
+				{
+					istr.getline(value, 100, ',');						// Extracts next value from fbuffString's stream
+					if(l==1)	session = atoi(value);
+					if(l==2)	repetition = atoi(value);
+					// if(l==5 || l==8 || l==11 || l==14 || l==17 || l==20 || l==23 || l==26 || l==29 || l==32)	// UD.key1.key2 values from the dataset are used to denote the delay between the keys.
+					if(l==4 || l==7 || l==10 || l==13 || l==16 || l==19 || l==22 || l==25 || l==28 || l==31)	// DD.key1.key2 values from the dataset are used to denote the delay between the keys.
+					{
+						float temp = atof(value);
+						if(temp<0)
+							testDelays[position] = 0;
+						else
+							testDelays[position] = temp*100;
+						position++;
+					}
+				}
+				gruntWorkForFisWorking(testDelays, testProfile);
+				retrieveStoredProfile(storedProfile, username);
+				similarityPercent += checkSimilarityOfProfiles(storedProfile, testProfile);
+			}
+			meanSimilarityPercent = similarityPercent/NO_OF_TESTING_ATTEMPTS;
+			if(i==j)	cout<<"\t";
+			cout<<"Mean similarity percentage of user "<<i<<"("<<usernames[i]<<") and user "<<j<<"("<<username<<"):"<<meanSimilarityPercent<<"%"<<endl;
+			totalSum += meanSimilarityPercent;
+
+			for (int k = (start+NO_OF_TESTING_ATTEMPTS); k < 400; k++)	// This will discard the rest of the (400-(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS)) lines of CSV and move the file pointer to the next user.
+				fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
 		}
-		meanSimilarityPercent = similarityPercent/NO_OF_TESTING_ATTEMPTS;
-		cout<<"Mean similarity percentage:"<<meanSimilarityPercent<<"%"<<endl;
-		totalSum += meanSimilarityPercent;
-		for (int j = (NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS); j < 400; j++)	// This will discard the rest of the (400-(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS)) lines of CSV and move the file pointer to the next user.
-			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
 	}
-	cout<<"Average similarity of test and stored profiles over all users:"<<(float)totalSum/(NO_OF_USERS)<<"%"<<endl;
+	// cout<<"Average similarity of test and stored profiles over all users:"<<(float)totalSum/(NO_OF_USERS)<<"%"<<endl;
 
 	delete(username);
 	fin.close();

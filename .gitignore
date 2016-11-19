@@ -1,4 +1,5 @@
-fuzzy_new
+fuzzy/fuzzy_old
+fuzzy/fuzzy
 data/DSL-StrongPasswordData.csv
 data/DSL-StrongPasswordData.txt
 evaluation-script.R
