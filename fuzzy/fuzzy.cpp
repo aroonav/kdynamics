@@ -10,21 +10,23 @@
 #define USERNAME_LENGTH 4					// Length of the username. ex "s001"
 #define PASSWORD_LENGTH 11					// Length of the password ".tie5Roanl" + Return Key.
 #define UNCLASSIFIED_VALUE -10				// Value denoting Unclassification.
-#define NO_OF_FUZZY_SETS 5					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
+#define NO_OF_FUZZY_SETS 7					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
 
-#define NO_OF_TRIES 15						// No. of trials done to train/create fuzzy rule for a single user
+#define NO_OF_TRIES 25						// No. of trials done to train/create fuzzy rule for a single user
 #define NO_OF_USERS 10						// No. of users for this FIS.
-#define NO_OF_TESTING_ATTEMPTS 20			// This is the number of test attempts of one particular user against his/her stored profile. This means that 100 attempts of this user will be extracted from the dataset and checked against the stored profile.
+#define NO_OF_TESTING_ATTEMPTS 10			// This is the number of test attempts of one particular user against his/her stored profile. This means that 100 attempts of this user will be extracted from the dataset and checked against the stored profile.
 
 using namespace std;
 
-float classifiers[NO_OF_FUZZY_SETS][3]={	//Low value, Middle Value, High Value
-							{6,			 22,			38},	// Very Fast
-							{28, 		 44,			60},	// Fast
-							{50, 		 66,			82},	// Moderate
-							{72, 		 88,			104},	// Slow
-							{94,		 110,			126}	// Very Slow
-					};
+float classifiers[8][3]={	//Low value, Middle Value, High Value
+											{6,			12,		18},	// Very Fast part 1
+											{15,		21,		27},	// Very Fast part 2
+											{24,		30,		36},	// Very Fast part 3
+											{28, 		44,		60},	// Fast
+											{50, 		66,		82},	// Moderate
+											{72, 		88,		104},	// Slow
+											{94,		110,	126}	// Very Slow
+									};
 
 // Returns the membership value for the given input depending on the other input variables
 float membership_value(float input, float lowValue, float midValue, float highValue)
@@ -101,12 +103,13 @@ int gruntWorkForFisLearning(float* vector)
 
 // //	This block is for testing purposes only. This block allows us to see the values in realtime.
 // 		cout<<"###################Part2\n";
+// 		cout<<weightedAverage_cog<<" ";
 // 		for (int i = 0; i < NO_OF_FUZZY_SETS; i++)
 // 		{
 // 			cout<<weightedAverage_memberships[i]<<" ";
 // 		}
 // 		cout<<endl;
-// 		cout<<"weightedAverage_cog="<<weightedAverage_cog<<" weightedSum="<<weightedSum<<" membershipSum="<<membershipSum<<" finalMembership="<<finalMembership<<endl;
+// 		cout<<"weightedSum="<<weightedSum<<" membershipSum="<<membershipSum<<" finalMembership="<<finalMembership<<endl;
 // 		scanf("%*c");
 // //	Testing Block ends here.
 
@@ -167,7 +170,7 @@ void fis_learning()
 }
 
 
-void retrieveStoredProfile(int* storedProfile, char* username)
+void retrieveStoredProfile(int* storedProfile, string username)
 {
 	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
 	char* testUsername = new char[USERNAME_LENGTH+1];
@@ -179,7 +182,7 @@ void retrieveStoredProfile(int* storedProfile, char* username)
 		string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
 		istringstream istr(fbuffString);						// Create a stream from the std::string fbuffString
 		istr.getline(testUsername, USERNAME_LENGTH+1, ',');		// Extract username from fbuffString's stream
-		if(strcmp(username, testUsername)==0)
+		if(strcmp(username.c_str(), testUsername)==0)
 		{
 			for (int i = 0; i < PASSWORD_LENGTH-1; i++)
 			{
@@ -240,14 +243,6 @@ void gruntWorkForFisWorking(float* vector, int* testProfile)
 // //	This block is for testing purposes only. This block allows us to see the values in realtime.
 		testProfile[i] = finalMembership;
 	}
-
-// //	This block is for testing purposes only. This block allows us to see the values in realtime.
-// 	cout<<"Membership Values: ";
-// 	for (int i = 0; i < PASSWORD_LENGTH-1; i++)
-// 		cout<<testProfile[i]<<" ";
-// 	cout<<endl<<endl;
-// 	scanf("%*c");
-// //	This block is for testing purposes only. This block allows us to see the values in realtime.
 }
 
 // Fuzzy Inference System working/testing component
@@ -279,7 +274,7 @@ void fis_working()
 
 
 			if(i==j)	// The jth user is being tested against its own stored profile if this is true.
-			{	for(int k=0; k<NO_OF_TRIES; k++)
+			{	for(int k=0; k<NO_OF_TRIES; k++)		// So skip the first NO_OF_TRIES lines used in the learning phase.
 					fin.getline(fbuff, BUFFER_SIZE);
 				start = NO_OF_TRIES;
 			}
@@ -311,13 +306,31 @@ void fis_working()
 						position++;
 					}
 				}
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+// 				cout<<"Stored profile:"<<usernames[i]<<endl;
+// 				cout<<"Test profile:"<<username<<" session:"<<session<<" repetition:"<<repetition<<endl;
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
 				gruntWorkForFisWorking(testDelays, testProfile);
-				retrieveStoredProfile(storedProfile, username);
-				similarityPercent += checkSimilarityOfProfiles(storedProfile, testProfile);
+				retrieveStoredProfile(storedProfile, usernames[i]);
+				float similarity = checkSimilarityOfProfiles(storedProfile, testProfile);
+				similarityPercent += similarity;
+
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+// 				cout<<"(Stored Profile): ";		//ith user.
+// 				for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+// 					cout<<storedProfile[i]<<" ";
+// 				cout<<endl;
+// 				cout<<"  (Test Profile): ";		//jth user.
+// 				for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+// 					cout<<testProfile[i]<<" ";
+// 				cout<<"\nSimilarity:"<<similarity<<"%"<<endl;
+// 				scanf("%*c");
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
 			}
 			meanSimilarityPercent = similarityPercent/NO_OF_TESTING_ATTEMPTS;
 			if(i==j)	cout<<"\t";
-			cout<<"Mean similarity percentage of user "<<i<<"("<<usernames[i]<<") and user "<<j<<"("<<username<<"):"<<meanSimilarityPercent<<"%"<<endl;
+			// cout<<"Mean similarity percentage of user "<<i<<"("<<usernames[i]<<") and user "<<j<<"("<<usernames[j]<<"):"<<meanSimilarityPercent<<"%(similarityPercent:"<<similarityPercent<<" NO_OF_TESTING_ATTEMPTS:"<<NO_OF_TESTING_ATTEMPTS<<")"<<endl;
+			cout<<"Mean similarity percentage of user "<<i<<"("<<usernames[i]<<") and user "<<j<<"("<<usernames[j]<<"):"<<meanSimilarityPercent<<"%"<<endl;
 			totalSum += meanSimilarityPercent;
 
 			for (int k = (start+NO_OF_TESTING_ATTEMPTS); k < 400; k++)	// This will discard the rest of the (400-(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS)) lines of CSV and move the file pointer to the next user.
