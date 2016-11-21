@@ -18,7 +18,7 @@
 
 using namespace std;
 
-float classifiers[8][3]={	//Low value, Middle Value, High Value
+float classifiers[NO_OF_FUZZY_SETS][3]={	//Low value, Middle Value, High Value
 											{6,			12,		18},	// Very Fast part 1
 											{15,		21,		27},	// Very Fast part 2
 											{24,		30,		36},	// Very Fast part 3
@@ -60,7 +60,7 @@ int gruntWorkForFisLearning(float* vector)
 	float membership_values[NO_OF_TRIES][NO_OF_FUZZY_SETS];			// This contains the membership values where each value denotes the membership value of that particular row in the column's fuzzy set.
 	float weightedAverage_memberships[NO_OF_FUZZY_SETS];			// After the defuzzification, the value is again fuzzified and this array contains the membership values for the defuzzified value in the $NO_OF_FUZZY_SETS fuzzy sets
 	float max = 0.0;
-	float weightedSum = 0.0;float membershipSum = 0.0;			// weightedSum and membershipSum is the numerator and denominator respetively for the calculation of the weightedAverage using COG method during defuzzification.
+	float weightedSum = 0.0;float membershipSum = 0.0;				// weightedSum and membershipSum is the numerator and denominator respetively for the calculation of the weightedAverage using COG method during defuzzification.
 	float weightedAverage_cog = 0.0;
 	memset(membership_values, 0, sizeof(membership_values));
 	memset(weightedAverage_memberships, 0, sizeof(weightedAverage_memberships));
@@ -74,11 +74,11 @@ int gruntWorkForFisLearning(float* vector)
 			if (membership_values[i][j]>max)
 				max = membership_values[i][j];
 		}
-		weightedSum += (max*vector[i]);							// Numerator for weighted average
-		membershipSum += max;									// Denominator for weighted average
+		weightedSum += (max*vector[i]);								// Numerator for weighted average
+		membershipSum += max;										// Denominator for weighted average
 	}
 	if(membershipSum!=0)
-		weightedAverage_cog = weightedSum/membershipSum;		// Defuzzified value using Centre of Gravity method.
+		weightedAverage_cog = weightedSum/membershipSum;			// Defuzzified value using Centre of Gravity method.
 
 // //	This block is for testing purposes only. This block allows us to see the values in realtime.
 // 		cout<<"##################Part1\n";
@@ -91,7 +91,7 @@ int gruntWorkForFisLearning(float* vector)
 // 		}
 // //	Testing block ends here.
 
-	for (int i = 0; i < NO_OF_FUZZY_SETS; i++)					// Defuzzified value is again fuzzified in this step.
+	for (int i = 0; i < NO_OF_FUZZY_SETS; i++)						// Defuzzified value is again fuzzified in this step.
 	{
 		weightedAverage_memberships[i] = membership_value(weightedAverage_cog, classifiers[i][0], classifiers[i][1], classifiers[i][2]);
 		if(weightedAverage_memberships[i]>max)
@@ -111,7 +111,7 @@ int gruntWorkForFisLearning(float* vector)
 // 		cout<<endl;
 // 		cout<<"weightedSum="<<weightedSum<<" membershipSum="<<membershipSum<<" finalMembership="<<finalMembership<<endl;
 // 		scanf("%*c");
-// //	Testing Block ends here.
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
 
 	return finalMembership;
 }
@@ -119,19 +119,19 @@ int gruntWorkForFisLearning(float* vector)
 // Fuzzy Inference System learning component
 void fis_learning()
 {
-	int finalMembership = UNCLASSIFIED_VALUE;			// This denotes the final membership of the delays given in the vector. That is, whether the delays given in the vector is Very Fast, Fast, Moderate, Slow, Very Slow. -10 denotes unclassified.
+	int finalMembership = UNCLASSIFIED_VALUE;						// This denotes the final membership of the delays given in the vector. That is, whether the delays given in the vector is Very Fast, Fast, Moderate, Slow, Very Slow. -10 denotes unclassified.
 	char* username = new char[USERNAME_LENGTH+1];
 	char* value = new char[6];
 	int profile[PASSWORD_LENGTH-1];memset(profile, 0, sizeof(profile));
 	float delays[PASSWORD_LENGTH-1][NO_OF_TRIES];memset(delays, 0, sizeof(delays));
-	char* fbuff = new char[BUFFER_SIZE];				// File Buffer
+	char* fbuff = new char[BUFFER_SIZE];							// File Buffer
 	ifstream fin;fin.open(DATASETPATH, ios::in);
-	fin.getline(fbuff, BUFFER_SIZE);					// Removes the first line from the file
+	fin.getline(fbuff, BUFFER_SIZE);								// Removes the first line from the file
 
-	for(int i = 0; i<NO_OF_USERS; i++)					// For each user, create the rules
+	for(int i = 0; i<NO_OF_USERS; i++)								// For each user, create the rules
 	{
 		memset(delays, 0, sizeof(delays));
-		for (int j = 0; j < NO_OF_TRIES; j++)			// By each user's, for each attempt out of his/her 15(``NO_OF_TRIES'') attempts at the password, fill up a column in a plane
+		for (int j = 0; j < NO_OF_TRIES; j++)						// By each user's, for each attempt out of his/her 15(``NO_OF_TRIES'') attempts at the password, fill up a column in a plane
 		{
 			fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
 			string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
@@ -203,9 +203,7 @@ float checkSimilarityOfProfiles(int* storedProfile, int* testProfile)
 	for (int i = 0; i < PASSWORD_LENGTH-1; i++)
 	{
 		if(storedProfile[i]==testProfile[i])
-		{	matchingValues++;
-			// cout<<storedProfile[i]<<" "<<testProfile[i]<<endl;
-		}
+			matchingValues++;
 	}
 	float percentMatch = ((float)matchingValues/(PASSWORD_LENGTH-1))*100;
 	return percentMatch;
@@ -256,17 +254,16 @@ void fis_working()
 	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
 	int repetition = -1;
 	int session = -1;
-	float totalSum = 0.0;
 	string usernames[NO_OF_USERS];
+	float array_similarity[NO_OF_USERS][NO_OF_USERS];
 
 	ifstream fin;fin.open(DATASETPATH, ios::in);
 
-	for (int i = 0; i < NO_OF_USERS; i++)			// For each ith user, compare the ith user's stored profile with jth user's profile.
+	for (int i = 0; i < NO_OF_USERS; i++)							// For each ith user, compare the ith user's stored profile with jth user's profile.
 	{
 		fin.clear();
-		fin.seekg(0, ios::beg);						// Take the get pointer to the start of the file.
-		fin.getline(fbuff, BUFFER_SIZE);			// Removes the first line from the file
-		cout<<endl;
+		fin.seekg(0, ios::beg);										// Take the get pointer to the start of the file.
+		fin.getline(fbuff, BUFFER_SIZE);							// Removes the first line from the file
 		for(int j = 0; j<NO_OF_USERS; j++)
 		{
 			float similarityPercent = 0.0; float meanSimilarityPercent = 0.0;int start = 0;
@@ -274,7 +271,7 @@ void fis_working()
 
 
 			if(i==j)	// The jth user is being tested against its own stored profile if this is true.
-			{	for(int k=0; k<NO_OF_TRIES; k++)		// So skip the first NO_OF_TRIES lines used in the learning phase.
+			{	for(int k=0; k<NO_OF_TRIES; k++)					// So skip the first NO_OF_TRIES lines used in the learning phase.
 					fin.getline(fbuff, BUFFER_SIZE);
 				start = NO_OF_TRIES;
 			}
@@ -283,16 +280,16 @@ void fis_working()
 
 			for(int k = start; k<(start+NO_OF_TESTING_ATTEMPTS); k++)
 			{
-				fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
-				string fbuffString(fbuff);								// Create a std::string fbuffString from char* fbuff
-				istringstream istr(fbuffString);						// Create a stream from the std::string fbuffString
-				istr.getline(username, USERNAME_LENGTH+1, ',');			// Extract username from fbuffString's stream
+				fin.getline(fbuff, BUFFER_SIZE);					// Read one entire line of CSV into fbuff
+				string fbuffString(fbuff);							// Create a std::string fbuffString from char* fbuff
+				istringstream istr(fbuffString);					// Create a stream from the std::string fbuffString
+				istr.getline(username, USERNAME_LENGTH+1, ',');		// Extract username from fbuffString's stream
 				if(k==start)	usernames[j] = username;
 
 				int position = 0;
-				for (int l = 1; l <= 33; l++)							// For each attempt at password, 10 values will be stored in a column
+				for (int l = 1; l <= 33; l++)						// For each attempt at password, 10 values will be stored in a column
 				{
-					istr.getline(value, 100, ',');						// Extracts next value from fbuffString's stream
+					istr.getline(value, 100, ',');					// Extracts next value from fbuffString's stream
 					if(l==1)	session = atoi(value);
 					if(l==2)	repetition = atoi(value);
 					// if(l==5 || l==8 || l==11 || l==14 || l==17 || l==20 || l==23 || l==26 || l==29 || l==32)	// UD.key1.key2 values from the dataset are used to denote the delay between the keys.
@@ -328,16 +325,28 @@ void fis_working()
 // //	This block is for testing purposes only. This block allows us to see the values in realtime.
 			}
 			meanSimilarityPercent = similarityPercent/NO_OF_TESTING_ATTEMPTS;
-			if(i==j)	cout<<"\t";
-			// cout<<"Mean similarity percentage of user "<<i<<"("<<usernames[i]<<") and user "<<j<<"("<<usernames[j]<<"):"<<meanSimilarityPercent<<"%(similarityPercent:"<<similarityPercent<<" NO_OF_TESTING_ATTEMPTS:"<<NO_OF_TESTING_ATTEMPTS<<")"<<endl;
-			cout<<"Mean similarity percentage of user "<<i<<"("<<usernames[i]<<") and user "<<j<<"("<<usernames[j]<<"):"<<meanSimilarityPercent<<"%"<<endl;
-			totalSum += meanSimilarityPercent;
+			array_similarity[i][j] = meanSimilarityPercent;
 
 			for (int k = (start+NO_OF_TESTING_ATTEMPTS); k < 400; k++)	// This will discard the rest of the (400-(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS)) lines of CSV and move the file pointer to the next user.
 				fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
 		}
 	}
-	// cout<<"Average similarity of test and stored profiles over all users:"<<(float)totalSum/(NO_OF_USERS)<<"%"<<endl;
+
+	/*	This part shows the similarity of user in the ith row with the user in the jth row.
+		The stored profile of the ith user is taken from the file and matched against the test profile in each of NO_OF_TESTING_ATTEMPTS attempts.
+		The value printed below is the mean of all these similarities over all NO_OF_TESTING_ATTEMPTS attempts.
+	*/
+	cout<<"     ";
+	for (int i = 0; i < NO_OF_USERS; i++)
+		cout<<usernames[i]<<"  ";
+	cout<<endl;
+	for (int i = 0; i < NO_OF_USERS; i++)
+	{
+		cout<<usernames[i]<<" ";
+		for (int j = 0; j < NO_OF_USERS; j++)
+			printf("%5.2f ", array_similarity[i][j]);
+		cout<<endl;
+	}
 
 	delete(username);
 	fin.close();
