@@ -1,7 +1,7 @@
 fuzzy/fuzzy_old
 fuzzy/fuzzy
-data/DSL-StrongPasswordData.csv
-data/DSL-StrongPasswordData.txt
+DSL-StrongPasswordData.csv
+DSL-StrongPasswordData.txt
 evaluation-script.R
 output
 data/.~lock.DSL-StrongPasswordData.csv#
