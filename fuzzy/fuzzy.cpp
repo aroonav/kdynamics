@@ -11,6 +11,7 @@
 #define PASSWORD_LENGTH 11					// Length of the password ".tie5Roanl" + Return Key.
 #define UNCLASSIFIED_VALUE -10				// Value denoting Unclassification.
 #define NO_OF_FUZZY_SETS 7					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
+#define NO_OF_TIMING_FEATURES 31
 
 #define NO_OF_TRIES 25						// No. of trials done to train/create fuzzy rule for a single user
 #define NO_OF_USERS 10						// No. of users for this FIS.
@@ -43,7 +44,7 @@ float membership_value(float input, float lowValue, float midValue, float highVa
 
 int writeProfileToFile(char* username, int* profile)
 {
-	int noOfDataItems = PASSWORD_LENGTH - 1;			// To write to file.
+	int noOfDataItems = NO_OF_TIMING_FEATURES;			// To write to file.
 	ofstream fout;fout.open(PROFILEPATH, std::ios_base::app);
 	fout<<username<<",";
 	for (int i = 0; i < noOfDataItems; i++)
@@ -122,8 +123,8 @@ void fis_learning()
 	int finalMembership = UNCLASSIFIED_VALUE;						// This denotes the final membership of the delays given in the vector. That is, whether the delays given in the vector is Very Fast, Fast, Moderate, Slow, Very Slow. -10 denotes unclassified.
 	char* username = new char[USERNAME_LENGTH+1];
 	char* value = new char[6];
-	int profile[PASSWORD_LENGTH-1];memset(profile, 0, sizeof(profile));
-	float delays[PASSWORD_LENGTH-1][NO_OF_TRIES];memset(delays, 0, sizeof(delays));
+	int profile[NO_OF_TIMING_FEATURES];memset(profile, 0, sizeof(profile));
+	float delays[NO_OF_TIMING_FEATURES][NO_OF_TRIES];memset(delays, 0, sizeof(delays));
 	char* fbuff = new char[BUFFER_SIZE];							// File Buffer
 	ifstream fin;fin.open(DATASETPATH, ios::in);
 	fin.getline(fbuff, BUFFER_SIZE);								// Removes the first line from the file
@@ -143,8 +144,7 @@ void fis_learning()
 			for (int k = 1; k <= 33; k++)							// For each attempt at password, 10 values will be stored in a column
 			{
 				istr.getline(value, 100, ',');						// Extracts next value from fbuffString's stream
-				// if(k==5 || k==8 || k==11 || k==14 || k==17 || k==20 || k==23 || k==26 || k==29 || k==32)	// UD.key1.key2 values from the dataset are used to denote the delay between the keys.
-				if(k==4 || k==7 || k==10 || k==13 || k==16 || k==19 || k==22 || k==25 || k==28 || k==31)	// DD.key1.key2 values from the dataset are used to denote the delay between the keys.
+				if(k>=3)
 				{
 					float temp = atof(value);
 					if(temp<0)	delays[position][j] = 0;
@@ -156,7 +156,7 @@ void fis_learning()
 		for (int j = NO_OF_TRIES; j < 400; j++)						// This will discard the rest of the (400-NO_OF_TRIES) lines of CSV and move the file pointer to the next user.
 			fin.getline(fbuff, BUFFER_SIZE);
 
-		for (int j = 0; j < PASSWORD_LENGTH-1; j++)
+		for (int j = 0; j < NO_OF_TIMING_FEATURES; j++)
 		{
 			finalMembership = gruntWorkForFisLearning(delays[j]);
 			profile[j] = finalMembership;
@@ -184,7 +184,7 @@ void retrieveStoredProfile(int* storedProfile, string username)
 		istr.getline(testUsername, USERNAME_LENGTH+1, ',');		// Extract username from fbuffString's stream
 		if(strcmp(username.c_str(), testUsername)==0)
 		{
-			for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+			for (int i = 0; i < NO_OF_TIMING_FEATURES; i++)
 			{
 				istr.getline(value, 100, ',');					// Extracts next value from fbuffString's stream
 				storedProfile[i] = atof(value);
@@ -200,23 +200,23 @@ void retrieveStoredProfile(int* storedProfile, string username)
 float checkSimilarityOfProfiles(int* storedProfile, int* testProfile)
 {
 	int matchingValues = 0;
-	for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+	for (int i = 0; i < NO_OF_TIMING_FEATURES; i++)
 	{
 		if(storedProfile[i]==testProfile[i])
 			matchingValues++;
 	}
-	float percentMatch = ((float)matchingValues/(PASSWORD_LENGTH-1))*100;
+	float percentMatch = ((float)matchingValues/NO_OF_TIMING_FEATURES)*100;
 	return percentMatch;
 }
 
 // This function classifies each value into a fuzzy set and stores the values of the fuzzy set in testProfile.
 void gruntWorkForFisWorking(float* vector, int* testProfile)
 {
-	float membership_values[PASSWORD_LENGTH-1][NO_OF_FUZZY_SETS];	// This contains the membership values where each value denotes the membership value of that particular row in the column's fuzzy set.
+	float membership_values[NO_OF_TIMING_FEATURES][NO_OF_FUZZY_SETS];	// This contains the membership values where each value denotes the membership value of that particular row in the column's fuzzy set.
 	float max = 0.0;
 	memset(membership_values, 0, sizeof(membership_values));
 
-	for (int i = 0; i < PASSWORD_LENGTH-1; i++)						// This finds the union of the fuzzy sets by finding the maximum of all the membership values for a particular row. It then uses this value to find the numerator and denominator to find the weightedAverage.
+	for (int i = 0; i < NO_OF_TIMING_FEATURES; i++)						// This finds the union of the fuzzy sets by finding the maximum of all the membership values for a particular row. It then uses this value to find the numerator and denominator to find the weightedAverage.
 	{
 		float max = 0.0;
 		int finalMembership = UNCLASSIFIED_VALUE;
@@ -248,9 +248,9 @@ void fis_working()
 {
 	char* username = new char[USERNAME_LENGTH+1];
 	char* value = new char[6];
-	int testProfile[PASSWORD_LENGTH-1];memset(testProfile, 0, sizeof(testProfile));
-	int storedProfile[PASSWORD_LENGTH-1];memset(storedProfile, 0, sizeof(storedProfile));
-	float testDelays[PASSWORD_LENGTH-1];memset(testDelays, 0, sizeof(testDelays));
+	int testProfile[NO_OF_TIMING_FEATURES];memset(testProfile, 0, sizeof(testProfile));
+	int storedProfile[NO_OF_TIMING_FEATURES];memset(storedProfile, 0, sizeof(storedProfile));
+	float testDelays[NO_OF_TIMING_FEATURES];memset(testDelays, 0, sizeof(testDelays));
 	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
 	int repetition = -1;
 	int session = -1;
@@ -291,9 +291,8 @@ void fis_working()
 				{
 					istr.getline(value, 100, ',');					// Extracts next value from fbuffString's stream
 					if(l==1)	session = atoi(value);
-					if(l==2)	repetition = atoi(value);
-					// if(l==5 || l==8 || l==11 || l==14 || l==17 || l==20 || l==23 || l==26 || l==29 || l==32)	// UD.key1.key2 values from the dataset are used to denote the delay between the keys.
-					if(l==4 || l==7 || l==10 || l==13 || l==16 || l==19 || l==22 || l==25 || l==28 || l==31)	// DD.key1.key2 values from the dataset are used to denote the delay between the keys.
+					else if(l==2)	repetition = atoi(value);
+					else if(l>=3)
 					{
 						float temp = atof(value);
 						if(temp<0)
@@ -314,11 +313,11 @@ void fis_working()
 
 // //	This block is for testing purposes only. This block allows us to see the values in realtime.
 // 				cout<<"(Stored Profile): ";		//ith user.
-// 				for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+// 				for (int i = 0; i < NO_OF_TIMING_FEATURES; i++)
 // 					cout<<storedProfile[i]<<" ";
 // 				cout<<endl;
 // 				cout<<"  (Test Profile): ";		//jth user.
-// 				for (int i = 0; i < PASSWORD_LENGTH-1; i++)
+// 				for (int i = 0; i < NO_OF_TIMING_FEATURES; i++)
 // 					cout<<testProfile[i]<<" ";
 // 				cout<<"\nSimilarity:"<<similarity<<"%"<<endl;
 // 				scanf("%*c");
