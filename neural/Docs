@@ -1,0 +1,17 @@
+Requirement - To build a 3 layer feed-forward network using backproagation algorithm.
+
+Architecture of the system-
+	1. Input Layer - 6 nodes/10 nodes*
+	2. Hidden Layer - 4 nodes
+	3. Output Layer - 1 node
+
+
+Input will be the feature vector i.e. the time delay between pressing consequtive characters in the password.
+Initially, only the Down-Down Time between two consequtive keys are being considered.   
+
+Password - 
+	".tie5Roanl"
+	There are 11 characters (including the Return key after the end of the password)
+	Thus the input vector will contain 10 values of inter-key delays.
+
+Phase 1: Training
