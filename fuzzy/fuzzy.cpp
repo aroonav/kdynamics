@@ -10,9 +10,9 @@
 #define USERNAME_LENGTH 4					// Length of the username. ex "s001"
 #define PASSWORD_LENGTH 11					// Length of the password ".tie5Roanl" + Return Key.
 #define UNCLASSIFIED_VALUE -10				// Value denoting Unclassification.
-#define NO_OF_FUZZY_SETS 7					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
 #define NO_OF_TIMING_FEATURES 31
 
+#define NO_OF_FUZZY_SETS 7					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
 #define NO_OF_TRIES 25						// No. of trials done to train/create fuzzy rule for a single user
 #define NO_OF_USERS 10						// No. of users for this FIS.
 #define NO_OF_TESTING_ATTEMPTS 10			// This is the number of test attempts of one particular user against his/her stored profile. This means that 100 attempts of this user will be extracted from the dataset and checked against the stored profile.
@@ -169,7 +169,6 @@ void fis_learning()
 	delete(fbuff);
 }
 
-
 void retrieveStoredProfile(int* storedProfile, string username)
 {
 	char* fbuff = new char[BUFFER_SIZE];			// File Buffer
@@ -197,16 +196,32 @@ void retrieveStoredProfile(int* storedProfile, string username)
 	delete(testUsername);
 }
 
-float checkSimilarityOfProfiles(int* storedProfile, int* testProfile)
+// This returns a value between 0 and 1 and is the value of the normed euclidean distance between the two profiles.
+float getEuclideanNorm(int* storedProfile, int* testProfile)
 {
-	int matchingValues = 0;
+	float squaredEuclideanDistance=0.0;
+	float normStoredProfile = 0.0;
+	float normTestProfile = 0.0;
+	int count = 0;
 	for (int i = 0; i < NO_OF_TIMING_FEATURES; i++)
 	{
-		if(storedProfile[i]==testProfile[i])
-			matchingValues++;
+		if(storedProfile[i]==-10 || testProfile[i]==-10)	// Neglect unclassified timing features. Don't use their values to calculate norm or calculate differences.
+			continue;
+		else
+		{
+			float diff = (storedProfile[i]-testProfile[i]);
+			squaredEuclideanDistance += (diff*diff);
+			normStoredProfile += (storedProfile[i]*storedProfile[i]);
+			normTestProfile += (testProfile[i]*testProfile[i]);
+			count++;
+		}
 	}
-	float percentMatch = ((float)matchingValues/NO_OF_TIMING_FEATURES)*100;
-	return percentMatch;
+	// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+	// cout<<" count= "<<count<<" squaredEuclideanDistance="<<squaredEuclideanDistance<<" normStoredProfile="<<normStoredProfile<<" normTestProfile="<<normTestProfile<<endl;
+	// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+
+	float euclideanNorm = squaredEuclideanDistance/(normTestProfile*normStoredProfile);
+	return euclideanNorm;
 }
 
 // This function classifies each value into a fuzzy set and stores the values of the fuzzy set in testProfile.
@@ -255,30 +270,33 @@ void fis_working()
 	int repetition = -1;
 	int session = -1;
 	string usernames[NO_OF_USERS];
-	float array_similarity[NO_OF_USERS][NO_OF_USERS];
+	float array_euclideanNorm[NO_OF_USERS][NO_OF_USERS];
 
 	ifstream fin;fin.open(DATASETPATH, ios::in);
 
 	for (int i = 0; i < NO_OF_USERS; i++)							// For each ith user, compare the ith user's stored profile with jth user's profile.
 	{
+		float euclideanNorm_aggregate = 0.0;
 		fin.clear();
 		fin.seekg(0, ios::beg);										// Take the get pointer to the start of the file.
 		fin.getline(fbuff, BUFFER_SIZE);							// Removes the first line from the file
 		for(int j = 0; j<NO_OF_USERS; j++)
 		{
-			float similarityPercent = 0.0; float meanSimilarityPercent = 0.0;int start = 0;
+			euclideanNorm_aggregate = 0.0;
+			int start = 0;int end = 0;
 			memset(testDelays, 0, sizeof(testDelays));
 
-
 			if(i==j)	// The jth user is being tested against its own stored profile if this is true.
-			{	for(int k=0; k<NO_OF_TRIES; k++)					// So skip the first NO_OF_TRIES lines used in the learning phase.
+			{	for(int k=0; k<NO_OF_TRIES; k++)					// So skip the first NO_OF_TRIES lines that was used in the learning phase.
 					fin.getline(fbuff, BUFFER_SIZE);
 				start = NO_OF_TRIES;
+				end = NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS;
 			}
 			else
-				start = 0;
-
-			for(int k = start; k<(start+NO_OF_TESTING_ATTEMPTS); k++)
+			{	start = 0;
+				end = 5;
+			}
+			for(int k = start; k<end; k++)
 			{
 				fin.getline(fbuff, BUFFER_SIZE);					// Read one entire line of CSV into fbuff
 				string fbuffString(fbuff);							// Create a std::string fbuffString from char* fbuff
@@ -297,7 +315,7 @@ void fis_working()
 						float temp = atof(value);
 						if(temp<0)
 							testDelays[position] = 0;
-						else
+							else
 							testDelays[position] = temp*100;
 						position++;
 					}
@@ -308,8 +326,8 @@ void fis_working()
 // //	This block is for testing purposes only. This block allows us to see the values in realtime.
 				gruntWorkForFisWorking(testDelays, testProfile);
 				retrieveStoredProfile(storedProfile, usernames[i]);
-				float similarity = checkSimilarityOfProfiles(storedProfile, testProfile);
-				similarityPercent += similarity;
+				float euclideanNorm = getEuclideanNorm(storedProfile, testProfile);
+				euclideanNorm_aggregate += euclideanNorm;
 
 // //	This block is for testing purposes only. This block allows us to see the values in realtime.
 // 				cout<<"(Stored Profile): ";		//ith user.
@@ -319,33 +337,68 @@ void fis_working()
 // 				cout<<"  (Test Profile): ";		//jth user.
 // 				for (int i = 0; i < NO_OF_TIMING_FEATURES; i++)
 // 					cout<<testProfile[i]<<" ";
-// 				cout<<"\nSimilarity:"<<similarity<<"%"<<endl;
+// 				cout<<"\nEuclidean Norm:"<<euclideanNorm<<endl;
 // 				scanf("%*c");
 // //	This block is for testing purposes only. This block allows us to see the values in realtime.
 			}
-			meanSimilarityPercent = similarityPercent/NO_OF_TESTING_ATTEMPTS;
-			array_similarity[i][j] = meanSimilarityPercent;
 
-			for (int k = (start+NO_OF_TESTING_ATTEMPTS); k < 400; k++)	// This will discard the rest of the (400-(NO_OF_TRIES+NO_OF_TESTING_ATTEMPTS)) lines of CSV and move the file pointer to the next user.
-				fin.getline(fbuff, BUFFER_SIZE);						// Read one entire line of CSV into fbuff
+			for (int k = end; k < 400; k++)	// This will discard the rest of the (400-end) lines of CSV and move the file pointer to the next user.
+				fin.getline(fbuff, BUFFER_SIZE);
+
+			array_euclideanNorm[i][j] = euclideanNorm_aggregate;
 		}
 	}
 
-	/*	This part shows the similarity of user in the ith row with the user in the jth row.
-		The stored profile of the ith user is taken from the file and matched against the test profile in each of NO_OF_TESTING_ATTEMPTS attempts.
-		The value printed below is the mean of all these similarities over all NO_OF_TESTING_ATTEMPTS attempts.
-	*/
-	cout<<"     ";
-	for (int i = 0; i < NO_OF_USERS; i++)
-		cout<<usernames[i]<<"  ";
-	cout<<endl;
-	for (int i = 0; i < NO_OF_USERS; i++)
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+// 	//	This part shows the similarity/normed squared euclidean distance of user in the ith row with the user in the jth row.
+// 	//	The stored profile of the ith user is taken from the file and matched against the test profile in each of NO_OF_TESTING_ATTEMPTS attempts.
+// 	//	The value printed below is the mean of all these similarities/norm distances over all NO_OF_TESTING_ATTEMPTS attempts.
+
+// 	cout<<"\nNormed squared euclidean distances:\n     ";
+// 	for (int i = 0; i < NO_OF_USERS; i++)
+// 		cout<<usernames[i]<<"    ";
+// 	cout<<endl;
+// 	for (int i = 0; i < NO_OF_USERS; i++)
+// 	{
+// 		cout<<usernames[i]<<" ";
+// 		for (int j = 0; j < NO_OF_USERS; j++)
+// 			printf("%7.5f ", array_euclideanNorm[i][j]);
+// 		cout<<endl;
+// 	}
+// //	This block is for testing purposes only. This block allows us to see the values in realtime.
+
+
+	float userScoreAggregate = 0.0;
+	float imposterScoreAggregate = 0.0;
+
+	float allUserScoreSum = 0;
+	float allImposterScoreAggregate = 0;
+
+	float meanUserScore = 0.0;
+	float meanImposterScore = 0.0;
+
+ 	for (int i = 0; i < NO_OF_USERS; i++)
 	{
-		cout<<usernames[i]<<" ";
+		userScoreAggregate = imposterScoreAggregate = 0.0;
 		for (int j = 0; j < NO_OF_USERS; j++)
-			printf("%5.2f ", array_similarity[i][j]);
-		cout<<endl;
+				if(i==j)	userScoreAggregate = array_euclideanNorm[i][j];
+				else		imposterScoreAggregate += array_euclideanNorm[i][j];
+		userScoreAggregate /= NO_OF_TESTING_ATTEMPTS;
+		imposterScoreAggregate /= (5*(NO_OF_USERS-1));
+
+		allUserScoreSum += userScoreAggregate;
+		allImposterScoreAggregate += imposterScoreAggregate;
+		// cout<<usernames[i]<<":userScoreAggregate="<<userScoreAggregate<<" imposterScoreAggregate="<<imposterScoreAggregate<<endl;
 	}
+
+	meanUserScore = allUserScoreSum/NO_OF_USERS;
+	meanImposterScore = allImposterScoreAggregate/NO_OF_USERS;
+
+	// cout<<""<<userScoreAggregate<<endl;
+	// cout<<""<<imposterScoreAggregate<<endl;
+
+	printf("Mean user score: %8.6f\n", meanUserScore);
+	printf("Mean imposter score: %8.6f\n", meanImposterScore);
 
 	delete(username);
 	fin.close();
