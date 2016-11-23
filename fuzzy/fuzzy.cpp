@@ -12,13 +12,12 @@
 #define UNCLASSIFIED_VALUE -10				// Value denoting Unclassification.
 #define NO_OF_TIMING_FEATURES 31
 
-#define NO_OF_FUZZY_SETS 7					// No. of fuzzy sets, here 5 i.e Very Fast(0), Fast(1), Moderate(2), Slow(3), Very Slow(4)
-#define NO_OF_TRIES 25						// No. of trials done to train/create fuzzy rule for a single user
-#define NO_OF_USERS 10						// No. of users for this FIS.
-#define NO_OF_TESTING_ATTEMPTS 10			// This is the number of test attempts of one particular user against his/her stored profile. This means that 100 attempts of this user will be extracted from the dataset and checked against the stored profile.
-
 using namespace std;
 
+#define NO_OF_FUZZY_SETS 7					// No. of fuzzy sets.
+#define NO_OF_TRIES 200						// No. of trials done to train/create fuzzy rule for a single user.
+#define NO_OF_USERS 50						// No. of users for this FIS.
+#define NO_OF_TESTING_ATTEMPTS 200			// This is the number of test attempts of one particular user against his/her stored profile.
 float classifiers[NO_OF_FUZZY_SETS][3]={	//Low value, Middle Value, High Value
 											{6,			12,		18},	// Very Fast part 1
 											{15,		21,		27},	// Very Fast part 2
@@ -97,7 +96,7 @@ int gruntWorkForFisLearning(float* vector)
 		weightedAverage_memberships[i] = membership_value(weightedAverage_cog, classifiers[i][0], classifiers[i][1], classifiers[i][2]);
 		if(weightedAverage_memberships[i]>max)
 		{
-			finalMembership = i;
+			finalMembership = i+1;
 			max = weightedAverage_memberships[i];
 		}
 	}
@@ -220,6 +219,9 @@ float getEuclideanNorm(int* storedProfile, int* testProfile)
 	// cout<<" count= "<<count<<" squaredEuclideanDistance="<<squaredEuclideanDistance<<" normStoredProfile="<<normStoredProfile<<" normTestProfile="<<normTestProfile<<endl;
 	// //	This block is for testing purposes only. This block allows us to see the values in realtime.
 
+	// if(normStoredProfile==0)		cerr<<"Norm of stored profile is 0."<<endl;
+	// else if(normTestProfile==0)		cerr<<"Norm of test profile is 0."<<endl;
+
 	float euclideanNorm = squaredEuclideanDistance/(normTestProfile*normStoredProfile);
 	return euclideanNorm;
 }
@@ -244,7 +246,7 @@ void gruntWorkForFisWorking(float* vector, int* testProfile)
 			if (membership_values[i][j]>max)
 			{
 				max = membership_values[i][j];
-				finalMembership = j;
+				finalMembership = j+1;
 			}
 // //	This block is for testing purposes only. This block allows us to see the values in realtime.
 // 			cout<<membership_values[i][j]<<" ";
@@ -328,7 +330,6 @@ void fis_working()
 				retrieveStoredProfile(storedProfile, usernames[i]);
 				float euclideanNorm = getEuclideanNorm(storedProfile, testProfile);
 				euclideanNorm_aggregate += euclideanNorm;
-
 // //	This block is for testing purposes only. This block allows us to see the values in realtime.
 // 				cout<<"(Stored Profile): ";		//ith user.
 // 				for (int i = 0; i < NO_OF_TIMING_FEATURES; i++)
@@ -379,6 +380,7 @@ void fis_working()
 
  	for (int i = 0; i < NO_OF_USERS; i++)
 	{
+		// cout<<usernames[i]<<":userScoreAggregate="<<userScoreAggregate<<" imposterScoreAggregate="<<imposterScoreAggregate<<" allUserScoreSum="<<allUserScoreSum<<" allImposterScoreAggregate="<<allImposterScoreAggregate<<endl;
 		userScoreAggregate = imposterScoreAggregate = 0.0;
 		for (int j = 0; j < NO_OF_USERS; j++)
 				if(i==j)	userScoreAggregate = array_euclideanNorm[i][j];
@@ -388,17 +390,13 @@ void fis_working()
 
 		allUserScoreSum += userScoreAggregate;
 		allImposterScoreAggregate += imposterScoreAggregate;
-		// cout<<usernames[i]<<":userScoreAggregate="<<userScoreAggregate<<" imposterScoreAggregate="<<imposterScoreAggregate<<endl;
 	}
 
 	meanUserScore = allUserScoreSum/NO_OF_USERS;
 	meanImposterScore = allImposterScoreAggregate/NO_OF_USERS;
 
-	// cout<<""<<userScoreAggregate<<endl;
-	// cout<<""<<imposterScoreAggregate<<endl;
-
-	printf("Mean user score: %8.6f\n", meanUserScore);
-	printf("Mean imposter score: %8.6f\n", meanImposterScore);
+	printf("Mean user score: %11.9f\n", meanUserScore);
+	printf("Mean imposter score: %11.9f\n", meanImposterScore);
 
 	delete(username);
 	fin.close();
