@@ -7,5 +7,7 @@ new: fuzzy_originalModel.cpp
 debug: fuzzy.cpp
 	g++ fuzzy.cpp -g -o fuzzy
 	@echo "Run gdb fuzzy to debug."
-clean:
+clean: clean-data
 	rm -f fuzzy fuzzy_new
+clean-data:
+	rm -f profile/profiles.txt

@@ -7,3 +7,5 @@ output
 data/.~lock.DSL-StrongPasswordData.csv#
 models
 fuzzy/profile/profiles.txt
+*.jpg
+*.png

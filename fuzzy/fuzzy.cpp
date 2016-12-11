@@ -14,18 +14,16 @@
 
 using namespace std;
 
-#define NO_OF_FUZZY_SETS 7					// No. of fuzzy sets.
-#define NO_OF_TRIES 200						// No. of trials done to train/create fuzzy rule for a single user.
-#define NO_OF_USERS 50						// No. of users for this FIS.
-#define NO_OF_TESTING_ATTEMPTS 200			// This is the number of test attempts of one particular user against his/her stored profile.
-float classifiers[NO_OF_FUZZY_SETS][3]={	//Low value, Middle Value, High Value
-											{6,			12,		18},	// Very Fast part 1
-											{15,		21,		27},	// Very Fast part 2
-											{24,		30,		36},	// Very Fast part 3
-											{28, 		44,		60},	// Fast
-											{50, 		66,		82},	// Moderate
-											{72, 		88,		104},	// Slow
-											{94,		110,	126}	// Very Slow
+#define NO_OF_FUZZY_SETS 5
+#define NO_OF_TRIES 200
+#define NO_OF_USERS 50
+#define NO_OF_TESTING_ATTEMPTS 200
+float classifiers[NO_OF_FUZZY_SETS][3]={//Low value, Middle Value, High Value
+										{6,			 22,			38},	// Very Fast
+										{28, 		 44,			60},	// Fast
+										{50, 		 66,			82},	// Moderate
+										{72, 		 88,			104},	// Slow
+										{94,		 110,			126}	// Very Slow
 									};
 
 // Returns the membership value for the given input depending on the other input variables
@@ -378,6 +376,7 @@ void fis_working()
 	float meanUserScore = 0.0;
 	float meanImposterScore = 0.0;
 
+	cout<<"User Name 	User Score 	Imposter Score"<<endl;
  	for (int i = 0; i < NO_OF_USERS; i++)
 	{
 		// cout<<usernames[i]<<":userScoreAggregate="<<userScoreAggregate<<" imposterScoreAggregate="<<imposterScoreAggregate<<" allUserScoreSum="<<allUserScoreSum<<" allImposterScoreAggregate="<<allImposterScoreAggregate<<endl;
@@ -387,6 +386,10 @@ void fis_working()
 				else		imposterScoreAggregate += array_euclideanNorm[i][j];
 		userScoreAggregate /= NO_OF_TESTING_ATTEMPTS;
 		imposterScoreAggregate /= (5*(NO_OF_USERS-1));
+
+		// Show user score and imposter score for only specific users/all users.
+		// if(i==1)
+			cout<<usernames[i]<<"\t\t"<<userScoreAggregate<<"\t"<<imposterScoreAggregate<<endl;
 
 		allUserScoreSum += userScoreAggregate;
 		allImposterScoreAggregate += imposterScoreAggregate;
